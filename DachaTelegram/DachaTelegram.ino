@@ -14,17 +14,19 @@
 
 
 // Initialize Wifi connection to the router
-const char *ssid = "DachaSecurity3";   // cannot be longer than 32 characters!
-const char *pass = "xxx";   //                              // your network key
-const int RELAY_1 = 14;
-const int RELAY_2 = 12;
+const char *ssid = "DachaSecurity3_EXT";   // cannot be longer than 32 characters!
+const char *pass = "xxx";         // your network key
+// This is safe GPIO
+const int RELAY_1 = 5;
+const int RELAY_2 = 4;
 const int RELAY_3 = 13;
-const int RELAY_4 = 15;
+const int RELAY_4 = 2;
+int relays[] = {RELAY_1, RELAY_2, RELAY_3, RELAY_4};
 int status = WL_IDLE_STATUS;
 
 
 // Initialize Telegram BOT
-#define BOTtoken "249572387:xxx"  //token of TestBOT
+#define BOTtoken "xxx"  //token of TestBOT
 #define BOTname "xxx"
 #define BOTusername "xxx"
 TelegramBOT bot(BOTtoken, BOTname, BOTusername);
@@ -41,15 +43,10 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  pinMode(RELAY_1, OUTPUT);
-  pinMode(RELAY_2, OUTPUT);
-  pinMode(RELAY_3, OUTPUT);
-  pinMode(RELAY_4, OUTPUT);
-
-  digitalWrite(RELAY_1, HIGH);
-  digitalWrite(RELAY_2, HIGH);
-  digitalWrite(RELAY_3, HIGH);
-  digitalWrite(RELAY_4, HIGH);
+  for (int i=0; i<4; i++) {
+    pinMode(relays[i], OUTPUT);
+    digitalWrite(relays[i], HIGH);
+  }
 
   Serial.begin(115200);
   WiFi.begin(ssid, pass);
@@ -80,16 +77,17 @@ void Bot_EchoMessages() {
     action = "";
     object = "";
     message = bot.message[i][5];
+    message.toLowerCase();
 
-    if (message.indexOf("open garage") >= 0) {
+    if (message.indexOf("open_garage") >= 0) {
       object = "relay 1";
       gpioToUse = RELAY_1;
       action = "blink";
     }
 
-    if (message.indexOf("close garage") >= 0) {
+    if (message.indexOf("close_garage") >= 0) {
       object = "relay 2";
-      gpioToUse = RELAY_2;
+      gpioToUse = RELAY_1;
       action = "blink";
     }
     
@@ -114,7 +112,12 @@ void Bot_EchoMessages() {
       object = "led";
       gpioToUse = LED_BUILTIN;
     }
-
+    if (message.indexOf("demo") >= 0) {
+      action = "demo";
+      object = "demo";
+      gpioToUse = 0;
+    }
+    
     if (message.indexOf("turn on") >= 0) {
       action = "turn on";
     }
@@ -135,10 +138,19 @@ void Bot_EchoMessages() {
         digitalWrite(gpioToUse, LOW);
         delay(500);
         digitalWrite(gpioToUse, HIGH);
+      } else if (action == "demo") {
+        for (int j=0; j<5; j++) {
+          for (int i=0; i<4; i++) {
+            digitalWrite(relays[i], LOW);
+            delay(250);
+            digitalWrite(relays[i], HIGH);
+            delay(250);
+          }
+        }
       }
       
     } else {
-      answer = "Unknown command!";
+      answer = "Unknown command " + message + "! You can use /open_garage or /close_garage";
     }
     
     bot.sendMessage(bot.message[i][4], answer, "");
