@@ -91,7 +91,6 @@ void Bot_EchoMessages() {
       action = "blink";
     }
     
-
     if (message.indexOf("relay 1") >= 0) {
       object = "relay 1";
       gpioToUse = RELAY_1;
@@ -150,7 +149,7 @@ void Bot_EchoMessages() {
       }
       
     } else {
-      answer = "Unknown command " + message + "! You can use /open_garage or /close_garage";
+      answer = "Unknown command " + message + "! You can use /open_garage or /close_garage or relay <no> no=1,2,3,4 turn_off/turn_on/blink or demo for test";
     }
     
     bot.sendMessage(bot.message[i][4], answer, "");
